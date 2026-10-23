@@ -2,83 +2,189 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <!-- Viewport ini penting agar tampilan otomatis menyesuaikan layar HP / Tablet / Laptop -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Glitch Academy - Terminal Access</title>
-  <style>
-    body {
-      background-color: #0d1117;
-      color: #00ff66;
-      font-family: 'Courier New', Courier, monospace;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .terminal {
-      border: 2px solid #00ff66;
-      border-radius: 8px;
-      padding: 20px;
-      width: 80%;
-      max-width: 600px;
-      box-shadow: 0 0 15px rgba(0, 255, 102, 0.3);
-      background-color: #161b22;
-    }
-    input {
-      background: transparent;
-      border: 1px solid #00ff66;
-      color: #00ff66;
-      padding: 8px;
-      width: 70%;
-      font-family: inherit;
-    }
-    button {
-      background: #00ff66;
-      color: #0d1117;
-      border: none;
-      padding: 8px 15px;
-      font-weight: bold;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    button:hover {
-      background: #00cc52;
-    }
-    .status {
-      margin-top: 15px;
-      font-weight: bold;
-    }
-  </style>
+  <title>KantinKu - Smart Canteen & Pre-Order</title>
+  
+  <!-- Menghubungkan ke file CSS eksternal -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Font Awesome untuk ikon UI -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-  <div class="terminal">
-    <h2>[ SYSTEM EMERGENCY: OXYGEN SUPPLY ]</h2>
-    <p>Sistem pendingin bocor! Masukkan rumus molekul **Gas Murni Oksigen** untuk mengaktifkan filter udara emergency.</p>
+  <!-- ========================================== -->
+  <!-- HEADER & NAVIGATION                        -->
+  <!-- ========================================== -->
+  <header class="navbar">
+    <div class="nav-container">
+      <!-- Logo Aplikasi (Bisa diganti nama/logo sekolah) -->
+      <div class="logo">
+        <i class="fa-solid fa-utensils"></i> KantinKu
+      </div>
+
+      <!-- Pilihan Peran: Pembeli (Siswa) atau Penjual (Tenant) -->
+      <div class="role-selector">
+        <button class="role-btn active" id="btn-siswa" onclick="switchRole('siswa')">
+          <i class="fa-solid fa-user-graduate"></i> Siswa / Pembeli
+        </button>
+        <button class="role-btn" id="btn-tenant" onclick="switchRole('tenant')">
+          <i class="fa-solid fa-store"></i> Tenant / Penjual
+        </button>
+      </div>
+
+      <!-- Indikator Keranjang (Navigasi Atas Layar Lebar) -->
+      <div class="nav-cart-desktop" onclick="toggleCartModal(true)">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span>Keranjang</span>
+        <span class="cart-badge" id="cart-count-desktop">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- MODUS SISI PEMBELI (SISWA / STAF / GURU)  -->
+  <!-- ========================================== -->
+  <main id="buyer-section" class="main-content">
     
-    <div>
-      <input type="text" id="answerInput" placeholder="Ketik rumus kimia (misal: H2O)...">
-      <button onclick="checkAnswer()">INJECT</button>
+    <!-- Banner Selamat Datang -->
+    <section class="hero-banner">
+      <h2>Pesan Makanan Tanpa Antre! 🍔</h2>
+      <p>Pilih menu favoritmu, tentukan jam istirahat, dan ambil tepat waktu.</p>
+    </section>
+
+    <!-- Bar Pencarian & Filter Tenant -->
+    <section class="filter-section">
+      <!-- Input Cari Makanan -->
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="search-input" placeholder="Cari nasi goreng, es teh, dll..." oninput="filterMenu()">
+      </div>
+
+      <!-- Filter Pilihan Stand / Tenant -->
+      <div class="category-scroll">
+        <button class="cat-btn active" onclick="filterByTenant('ALL', this)">Semua Stand</button>
+        <button class="cat-btn" onclick="filterByTenant('Kantin Bu Sri', this)">Kantin Bu Sri</button>
+        <button class="cat-btn" onclick="filterByTenant('Stand Bakso Pak Kumis', this)">Bakso Pak Kumis</button>
+        <button class="cat-btn" onclick="filterByTenant('Kedai Minuman Segar', this)">Minuman Segar</button>
+      </div>
+    </section>
+
+    <!-- Grid Daftar Makanan / Minuman -->
+    <section class="menu-section">
+      <h3>Daftar Menu Tersedia</h3>
+      <div class="menu-grid" id="menu-grid-container">
+        <!-- Kartu Menu akan dimasukkan secara dinamis melalui file script.js -->
+      </div>
+    </section>
+
+    <!-- Seksi Status Pesanan Aktif -->
+    <section class="active-orders-section">
+      <h3><i class="fa-solid fa-clock-rotate-left"></i> Pesanan Aktif Anda</h3>
+      <div id="active-orders-container">
+        <p class="empty-state">Belum ada pesanan aktif.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODUS SISI PENJUAL (TENANT KANTIN)        -->
+  <!-- ========================================== -->
+  <main id="merchant-section" class="main-content hidden">
+    
+    <div class="merchant-header">
+      <h2>Dashboard Pengelola Tenant 🏪</h2>
+      <p>Kelola pesanan masuk dan atur ketersediaan menu secara langsung.</p>
     </div>
 
-    <div id="feedback" class="status">Status: Menunggu input...</div>
+    <!-- Kelola Stok Menu (Ready / Habis) -->
+    <section class="stock-management">
+      <h3>Pengaturan Stok Menu</h3>
+      <div class="stock-list" id="merchant-stock-list">
+        <!-- Daftar toggle stok diisi oleh JavaScript -->
+      </div>
+    </section>
+
+    <!-- Daftar Pesanan Masuk Pelanggan -->
+    <section class="incoming-orders">
+      <h3>Daftar Pesanan Masuk (Pre-Order)</h3>
+      <div class="order-list" id="merchant-order-list">
+        <!-- Kartu pesanan masuk diisi oleh JavaScript -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODAL / POPUP KERANJANG BELANJA            -->
+  <!-- ========================================== -->
+  <div class="modal-overlay" id="cart-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-cart-shopping"></i> Keranjang & Checkout</h3>
+        <button class="close-btn" onclick="toggleCartModal(false)">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Item Keranjang -->
+        <div id="cart-items-list">
+          <!-- Item diisi oleh JavaScript -->
+        </div>
+
+        <!-- Formulir Pilihan Waktu Pengambilan -->
+        <div class="checkout-form">
+          <label for="pickup-time"><i class="fa-regular fa-clock"></i> Pilih Jam Pengambilan:</label>
+          <select id="pickup-time">
+            <option value="Istirahat 1 (09:30 WIB)">Istirahat Pertama (09:30 WIB)</option>
+            <option value="Istirahat 2 (12:15 WIB)">Istirahat Kedua (12:15 WIB)</option>
+            <option value="Pulang Sekolah (15:00 WIB)">Pulang Sekolah (15:00 WIB)</option>
+          </select>
+
+          <!-- Formulir Pilihan Metode Pembayaran -->
+          <label for="payment-method"><i class="fa-solid fa-wallet"></i> Metode Pembayaran Cashless:</label>
+          <select id="payment-method">
+            <option value="QRIS KantinKu">QRIS (GoPay/OVO/Dana/LinkAja)</option>
+            <option value="Saldo Kartu Pelajar">Saldo Kartu Pelajar / Student Pass</option>
+          </select>
+
+          <!-- Rincian Total Harga -->
+          <div class="cart-total">
+            <span>Total Pembayaran:</span>
+            <strong id="cart-total-price">Rp 0</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="toggleCartModal(false)">Batal</button>
+        <button class="btn-primary" onclick="submitOrder()">Bayar & Konfirmasi Pesanan</button>
+      </div>
+    </div>
   </div>
 
-  <script>
-    function checkAnswer() {
-      const answer = document.getElementById("answerInput").value.trim().toUpperCase();
-      const feedback = document.getElementById("feedback");
+  <!-- ========================================== -->
+  <!-- BOTTOM NAVIGATION BAR (KHUSUS LAYAR HP)     -->
+  <!-- ========================================== -->
+  <nav class="mobile-bottom-nav">
+    <button class="nav-item active" onclick="switchRole('siswa')">
+      <i class="fa-solid fa-house"></i>
+      <span>Beranda</span>
+    </button>
+    <button class="nav-item" onclick="toggleCartModal(true)">
+      <div class="cart-badge-wrapper">
+        <i class="fa-solid fa-bag-shopping"></i>
+        <span class="cart-badge" id="cart-count-mobile">0</span>
+      </div>
+      <span>Keranjang</span>
+    </button>
+    <button class="nav-item" onclick="switchRole('tenant')">
+      <i class="fa-solid fa-store"></i>
+      <span>Dapur/Tenant</span>
+    </button>
+  </nav>
 
-      if (answer === "O2") {
-        feedback.style.color = "#00ff66";
-        feedback.innerHTML = "✅ AKSES DITERIMA! Udara bersih berhasil dialirkan. Level 1 Selesai!";
-      } else {
-        feedback.style.color = "#ff4d4d";
-        feedback.innerHTML = "❌ AKSES DITOLAK! Senyawa tidak stabil. Coba lagi!";
-      }
-    }
-  </script>
-
+  <!-- Menghubungkan ke file JavaScript eksternal -->
+  <script src="script.js"></script>
 </body>
 </html>
